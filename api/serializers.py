@@ -39,18 +39,16 @@ class CreateUserSerialzer(serializers.ModelSerializer):
         'password':{'write_only':True}
         }
 
-def validate(self,attrs):
+    def validate(self,attrs):
             if User.objects.filter(email=attrs['email']).exists():
                 raise serializers.ValidationError({"email":"Email already exists"})
             if User.objects.filter(username=attrs['username']).exists():
                 raise serializers.ValidationError({'username':'Username has been taken'})
             return attrs
         
-def create(self,validated_data):
-            user=User(
-                username=validated_data['username'],
-                email=validated_data['email']
-            )
-            user.set_password(validated_data['password'])
-            user.save()
-            return user
+    def create(self,validated_data):
+           password=validated_data.pop('password')
+           user=User.objects.create(**validated_data)
+           user.set_password(password)
+           user.save()
+           return user
