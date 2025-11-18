@@ -52,3 +52,35 @@ class CreateUserSerialzer(serializers.ModelSerializer):
            user.set_password(password)
            user.save()
            return user
+
+           #update user serializer
+class UpdateUserSerializer(serializers.ModelSerializer):
+     username = serializers.CharField(source='user.username', required=False)
+     email = serializers.EmailField(source='user.email', required=False)
+     first_name = serializers.CharField(source='user.first_name', required=False)
+     last_name = serializers.CharField(source='user.last_name', required=False)
+
+     class Meta:
+        model = userProfile
+        fields = [
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            
+        ]
+
+       
+     def update(self,instance,validated_data):
+         #extracting the  user data from the validated data
+         user_data=validated_data.pop('user',{})
+        #update user
+         user=instance.user
+         for attr,value in user_data.items():
+             setattr(user,attr,value)
+             user.save()
+         #update userprofile
+         for attr,value in validated_data.items():
+             setattr(instance,attr,value)
+             instance.save()
+             return instance
