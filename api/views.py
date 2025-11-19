@@ -9,7 +9,7 @@ from api.serializers import UserSerializer,CreateUserSerialzer,UpdateUserSeriali
 class CreateUserAPI(generics.CreateAPIView):
     queryset=userProfile.objects.all()
     serializer_class=CreateUserSerialzer
-    permission_classes=(AllowAny)
+    permission_classes=[AllowAny]
 
 class UpdateUserAPI(generics.UpdateAPIView):
     queryset=userProfile.objects.all()
