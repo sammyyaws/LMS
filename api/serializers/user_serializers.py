@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from  .models import userProfile
+from  ..models.user_models import userProfile
 
 class UserSerializer(serializers.ModelSerializer):
     username=serializers.CharField(source='user.username',read_only=True)
@@ -81,9 +81,9 @@ class UpdateUserSerializer(serializers.ModelSerializer):
          user=instance.user
          for attr,value in user_data.items():
              setattr(user,attr,value)
-             user.save()
+         user.save()
          #update userprofile
          for attr,value in validated_data.items():
              setattr(instance,attr,value)
-             instance.save()
-             return instance
+         instance.save()
+         return instance
