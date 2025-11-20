@@ -56,7 +56,7 @@ class CreateUserSerialzer(serializers.ModelSerializer):
            user.save()
            return user
 
-           #update user serializer
+           ###########update user serializer#################
 class UpdateUserSerializer(serializers.ModelSerializer):
      username = serializers.CharField(source='user.username', required=False)
      email = serializers.EmailField(source='user.email', required=False)
@@ -87,3 +87,10 @@ class UpdateUserSerializer(serializers.ModelSerializer):
              setattr(instance,attr,value)
          instance.save()
          return instance
+     
+        ###########login user serializer#################
+
+class LoginUserSerializer(serializers.Serializer):
+        email=serializers.EmailField()
+        password=serializers.CharField(style={'input_type':"password"},trim_whitespace=False)
+          
