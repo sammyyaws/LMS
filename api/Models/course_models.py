@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 ######courses
@@ -20,8 +21,8 @@ class courses(models.Model):
 ######grades by vic
 class grade(models.Model):
     grade_id = models.IntegerField(primary_key=True)
-    user = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id')
-    lesson = models.ForeignKey('Lesson', on_delete=models.CASCADE, db_column='lesson_id')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    lesson = models.ForeignKey('lessons', on_delete=models.CASCADE)
     score = models.IntegerField()
 
 
@@ -30,9 +31,9 @@ class grade(models.Model):
 #####progress by vic
 class progress(models.Model):
     progress_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id')
-    course = models.ForeignKey('Course', on_delete=models.CASCADE, db_column='course_id')
-    lesson = models.ForeignKey('Lesson', on_delete=models.CASCADE, db_column='lesson_id')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    course = models.ForeignKey('courses', on_delete=models.CASCADE)
+    lesson = models.ForeignKey('lessons', on_delete=models.CASCADE)
 
 
 
