@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from  ..models.user_models import userProfile
-
+from  ..Models.user_models import userProfile
+from  django.contrib.auth import authenticate
 class UserSerializer(serializers.ModelSerializer):
     username=serializers.CharField(source='user.username',read_only=True)
     email=serializers.EmailField(source='user.email',read_only=True)
@@ -91,6 +91,32 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         ###########login user serializer#################
 
 class LoginUserSerializer(serializers.Serializer):
-        email=serializers.EmailField()
-        password=serializers.CharField(style={'input_type':"password"},trim_whitespace=False)
-          
+    username = serializers.CharField()
+    password = serializers.CharField(
+        style={'input_type': "password"},
+        trim_whitespace=False
+    )
+
+    def validate(self, attrs):
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        if not username or not password:
+            raise serializers.ValidationError("Username and password are required.")
+
+        # Check if the username exists
+        if not User.objects.filter(username=username).exists():
+            raise serializers.ValidationError("Username does not exist.")
+
+        # Authenticate the user
+        user = authenticate(
+            request=self.context.get('request'),
+            username=username,
+            password=password
+        )
+
+        if not user:
+            raise serializers.ValidationError("Incorrect username or password.")
+
+        attrs['user'] = user
+        return attrs

@@ -3,8 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
-from api.models.user_models import userProfile
-from api.serializers.user_serializers import UserSerializer,CreateUserSerialzer,UpdateUserSerializer
+from api.Models.user_models import userProfile
+from api.serializers.user_serializers import UserSerializer,CreateUserSerialzer,UpdateUserSerializer,LoginUserSerializer
+from knox import views as Knox_view
+from django.contrib.auth import login
+
 
 class CreateUserAPI(generics.CreateAPIView):
     queryset=userProfile.objects.all()
@@ -14,3 +17,25 @@ class CreateUserAPI(generics.CreateAPIView):
 class UpdateUserAPI(generics.UpdateAPIView):
     queryset=userProfile.objects.all()
     serializer_class=UpdateUserSerializer
+
+
+class LoginUserView(Knox_view.LoginView):
+    permission_classes = [AllowAny]
+    serializer_class = LoginUserSerializer
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        login(request, user)
+        # Get Knox token response
+        response = super().post(request, format)
+        # Get user profile
+        try:
+            profile = userProfile.objects.get(user=user)
+            user_data = UserSerializer(profile).data
+        except userProfile.DoesNotExist:
+            user_data = {"id": user.id}
+        # Build custom response
+        response.data["user"] = user_data
+        return response

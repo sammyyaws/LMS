@@ -123,6 +123,6 @@ REST_FRAMEWORK = {
     }
 
 REST_KNOX={
-    "USER_SERIALIZER":'api.serializers.UserSerializer',
+    "USER_SERIALIZER":'api.serializers.user_serializers.UserSerializer',
     'TOKEN_TTL':timedelta(hours=24)
 }
