@@ -85,11 +85,8 @@ class Quiz(models.Model):
    lesson_id = models.ForeignKey("lessons",on_delete=models.CASCADE)
 
    quiz_title = models.CharField(max_length=255)
-   #JSON field to match longtext and also CHECK json_valid
    quiz_content = models.JSONField()
-   
    max_score = models.IntegerField()
-
    date_created = models.DateTimeField()
    created_by = models.IntegerField()
    date_modified = models.DateTimeField(auto_now=True)
