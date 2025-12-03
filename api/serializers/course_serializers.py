@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..Models.course_models import courses, lessons, Assignment, Quiz, Submission
+from ..Models.course_models import Courses, Lessons, Assignment, Quiz, Submission
 
 
 
@@ -12,7 +12,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
 ###AssignmentSerializer with nested submissions
 class AssignmentSerializer(serializers.ModelSerializer):
-    submissions = SubmissionSerializer(many=True, read_only=True, source='submission_set')
+    submissions = SubmissionSerializer(many=True, read_only=True, )
 
     class Meta:
         model =Assignment
@@ -38,30 +38,12 @@ class QuizSerializer(serializers.ModelSerializer):
 
 ### Lesson Serializer with nested assignments and quizzes
 class LessonSerializer(serializers.ModelSerializer):
-    assignments = AssignmentSerializer(many=True, read_only=True, source='assignment_set')
-    quizzes = QuizSerializer(many=True, read_only=True, source='quiz_set')
+    assignments = AssignmentSerializer(many=True, read_only=True, )
+    quizzes = QuizSerializer(many=True, read_only=True, )
 
     class Meta:
-        model = lessons
+        model = Lessons
         fields = "__all__"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -71,7 +53,7 @@ class CourseSerializer(serializers.ModelSerializer):
     lessons= LessonSerializer(many=True, read_only=True, source='lessons_set')
 
     class Meta:
-        model = courses
+        model = Courses
         fields = "__all__"
         read_only_fields = ["date_created", "date_modified"]
 
