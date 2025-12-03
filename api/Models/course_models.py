@@ -10,8 +10,9 @@ class Course_categories(models.Model):
 
     category_name = models.CharField(max_length=255)
     category_description = models.CharField(max_length=255)
-    date_created = models.DateTimeField()
-    date_modified = models.DateTimeField(db_column='date modified')
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
 class Courses(models.Model):
     title = models.CharField(max_length=255)
     category = models.ForeignKey(Course_categories, on_delete=models.SET_NULL, null=True)
@@ -33,7 +34,7 @@ class Courses(models.Model):
 class Grade(models.Model):
  
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    lesson = models.ForeignKey('Lessons', on_delete=models.CASCADE)
+    lesson = models.ForeignKey('Lessons', on_delete=models.CASCADE, related_name='grades')
     score = models.IntegerField()
 
 
@@ -61,7 +62,9 @@ class Lessons(models.Model):
    lesson_type = models.JSONField()
    content_url = models.CharField(max_length=255, blank=True, null=True)
    order_position = models.IntegerField()  # recommended numeric, not char
-   date_created = models.DateTimeField(auto_now_add=True) 
+   date_created = models.DateTimeField(auto_now_add=True)
+   date_modified = models.DateTimeField(auto_now=True)
+
    def __str__(self):
       return self.lesson_title
    
@@ -94,7 +97,6 @@ class Quiz(models.Model):
    quiz_title = models.CharField(max_length=255)
    quiz_content = models.JSONField()
    max_score = models.IntegerField()
-   date_created = models.DateTimeField()
    date_created = models.DateTimeField(auto_now_add=True)
    date_modified = models.DateTimeField(auto_now=True)
 

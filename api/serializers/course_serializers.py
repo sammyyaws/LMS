@@ -12,7 +12,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
 ###AssignmentSerializer with nested submissions
 class AssignmentSerializer(serializers.ModelSerializer):
-    submissions = SubmissionSerializer(many=True, read_only=True, )
+    submissions = SubmissionSerializer(many=True, read_only=True, source='submissions')
 
     class Meta:
         model =Assignment
@@ -38,8 +38,8 @@ class QuizSerializer(serializers.ModelSerializer):
 
 ### Lesson Serializer with nested assignments and quizzes
 class LessonSerializer(serializers.ModelSerializer):
-    assignments = AssignmentSerializer(many=True, read_only=True, )
-    quizzes = QuizSerializer(many=True, read_only=True, )
+    assignments = AssignmentSerializer(many=True, read_only=True, source='lesson_assignments')
+    quizzes = QuizSerializer(many=True, read_only=True, source='lesson_quizzes')
 
     class Meta:
         model = Lessons
@@ -50,7 +50,7 @@ class LessonSerializer(serializers.ModelSerializer):
 
 ### Lessons nested inside the CourseSerializer
 class CourseSerializer(serializers.ModelSerializer):
-    lessons= LessonSerializer(many=True, read_only=True, source='lessons_set')
+    lessons= LessonSerializer(many=True, read_only=True)
 
     class Meta:
         model = Courses
