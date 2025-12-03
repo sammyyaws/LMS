@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from  ..Models.user_models import userProfile
+from ..Models.roles_models import Role
 from  django.contrib.auth import authenticate
 class UserSerializer(serializers.ModelSerializer):
     username=serializers.CharField(source='user.username',read_only=True)
@@ -18,8 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'is_active',
-            'role_id',
-            'token_id',
+            'role',
             'date_created',
             'date_modified',
             'activated_at',
@@ -54,6 +54,10 @@ class CreateUserSerialzer(serializers.ModelSerializer):
            user=User.objects.create(**validated_data)
            user.set_password(password)
            user.save()
+##assigning defualt role to user
+           default_role=Role.objects.get(role_name='student')
+           ###creating the a new user profile
+           user_profile=userProfile.objects.create(user=user, role=default_role)
            return user
 
            ###########update user serializer#################

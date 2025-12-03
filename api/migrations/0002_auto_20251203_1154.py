@@ -14,7 +14,7 @@ def seed_roles(apps,schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0003_course_categories_role_remove_userprofile_role_id_and_more'),
+        ('api', '0001_initial'),
     ]
 
     operations = [
