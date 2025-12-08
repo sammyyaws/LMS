@@ -7,22 +7,40 @@ from django.contrib.auth.models import User
 
 
 class Course_categories(models.Model):
+    category_name = models.CharField(max_length=255, unique=True)
+    category_description = models.TextField(blank=True, null=True)
 
-    category_name = models.CharField(max_length=255)
-    category_description = models.CharField(max_length=255)
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = "Course Category"
+        verbose_name_plural = "Course Categories"
+        ordering = ["category_name"]   # always sorted alphabetically
+
+    def __str__(self):
+        return self.category_name
+
+
 class Courses(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
     title = models.CharField(max_length=255)
-    category = models.ForeignKey(Course_categories, on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey(Course_categories, on_delete=models.SET_NULL, null=True, related_name="courses")
     description = models.TextField()
-    status = models.CharField(max_length=50, default="pending") 
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="pending")
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_courses")
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="approved_courses")
     approved_at = models.DateTimeField(null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
+    
+    #Method to get the creator's name
+    def get_creator_name(self):
+        return self.creator.get_full_name() 
 
     def __str__(self):
         return self.title

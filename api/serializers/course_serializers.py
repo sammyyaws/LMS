@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..Models.course_models import Courses, Lessons, Assignment, Quiz, Submission
+from ..Models.course_models import Courses, Lessons, Assignment, Quiz, Submission,Course_categories
 
 
 
@@ -40,24 +40,124 @@ class QuizSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     assignments = AssignmentSerializer(many=True, read_only=True, source='lesson_assignments')
     quizzes = QuizSerializer(many=True, read_only=True, source='lesson_quizzes')
+    assignment_count = serializers.SerializerMethodField()
+    quiz_count = serializers.SerializerMethodField()
+    course_title = serializers.ReadOnlyField(source='course.title')
 
     class Meta:
         model = Lessons
         fields = "__all__"
 
+    def get_assignment_count(self, obj):
+        return obj.lesson_assignments.count()
+
+    def get_quiz_count(self, obj):
+        return obj.lesson_quizzes.count()
+
+    def validate_lesson_title(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Lesson title cannot be empty.")
+        return value
+
+    def validate_order_position(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Order position must be a positive integer.")
+        return value
 
 
 
-### Lessons nested inside the CourseSerializer
+
+
+######################  course category serializer  ###############
+class CategorySerializer(serializers.ModelSerializer):
+    course_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course_categories
+        fields = [
+            "id",
+            "category_name",
+            "category_description",
+            "date_created",
+            "date_modified",
+            "course_count",
+        ]
+        read_only_fields = ["date_created", "date_modified"]
+
+    def get_course_count(self, obj):
+        return obj.courses_set.count() if hasattr(obj, "courses_set") else 0
+
+    def validate_category_name(self, value):
+        """Ensure category name is unique even during updates."""
+        category_id = getattr(self.instance, "id", None)
+        if Course_categories.objects.filter(category_name=value).exclude(id=category_id).exists():
+            raise serializers.ValidationError("A category with this name already exists.")
+        return value
+
+
+######################  course serializer  ###############
 class CourseSerializer(serializers.ModelSerializer):
-    lessons= LessonSerializer(many=True, read_only=True)
+    # Nested read-only fields
+    lessons = LessonSerializer(many=True, read_only=True)
+    category = CategorySerializer(read_only=True)
+
+    # Write-only field for category assignment
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Course_categories.objects.all(),
+        source='category',
+        write_only=True
+    )
+
+    # Extra information fields
+    creator_name = serializers.SerializerMethodField()
+    lesson_count = serializers.SerializerMethodField()
+    creator_id = serializers.ReadOnlyField(source='creator.id')
 
     class Meta:
         model = Courses
-        fields = "__all__"
-        read_only_fields = ["date_created", "date_modified"]
+        fields = [
+            "id", "title", "description", "status",
+            "category", "category_id",
+            "creator_id", "creator_name",
+            "approved_by", "approved_at",
+            "date_created", "date_modified",
+            "lessons", "lesson_count"
+        ]
 
-    
+        read_only_fields = [
+            "status",          # creators cannot set this
+            "approved_by",
+            "approved_at",
+            "date_created",
+            "date_modified",
+            "creator_id"
+        ]
 
+  
 
+    def get_creator_name(self, obj):
+        return obj.get_creator_name()
+
+    def get_lesson_count(self, obj):
+        return obj.lessons.count()
+
+   
+    # VALIDATIONS
+   
+
+    def validate_title(self, value):
+        """Ensure title is unique even during updates."""
+        course_id = getattr(self.instance, "id", None)
+        if Courses.objects.filter(title=value).exclude(id=course_id).exists():
+            raise serializers.ValidationError(
+                "A course with this title already exists."
+            )
+        return value
+
+    def validate_status(self, value):
+        """Protect against someone sending random status during hacking."""
+        allowed = ["pending", "approved", "rejected"]
+        if value not in allowed:
+            raise serializers.ValidationError("Invalid status value.")
+        return value
 
