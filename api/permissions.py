@@ -46,3 +46,14 @@ class is_Admin_or_Instructor (BasePermission):
            hasattr(request.user, "userProfile") and
            request.user.userProfile.role.role_name in ['admin', 'instructor']
         )
+    
+
+### Superadmin, Admin, or Instructor
+class isSuperAdmin_Admin_Instructor(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated and
+            hasattr(request.user, "userProfile") and
+            request.user.userProfile.role.role_name in ['superadmin', 'admin', 'instructor']
+        )
+    
