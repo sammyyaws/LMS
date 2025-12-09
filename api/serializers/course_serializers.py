@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ..Models.course_models import Courses, Lessons, Assignment, Quiz, Submission,Course_categories
+from django.utils import timezone
 
 
 
@@ -12,16 +13,59 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
 ###AssignmentSerializer with nested submissions
 class AssignmentSerializer(serializers.ModelSerializer):
-    submissions = SubmissionSerializer(many=True, read_only=True, source='submissions')
+    # Optional: show readable info instead of just IDs
+    course_title = serializers.CharField(source="course.title", read_only=True)
+    lesson_title = serializers.CharField(source="lesson.lesson_title", read_only=True)
 
     class Meta:
-        model =Assignment
-        fields = "__all__"
+        model = Assignment
+        fields = [
+            "id",
+            "course",
+            "course_title",
+            "lesson",
+            "lesson_title",
+            "assignment_title",
+            "assignment_description",
+            "due_date",
+            "max_score",
+            "date_created",
+            "date_modified",
+        ]
         read_only_fields = ["date_created", "date_modified"]
 
+    # ------- FIELD LEVEL VALIDATIONS -------
 
+    def validate_assignment_title(self, value):
+        if len(value) < 3:
+            raise serializers.ValidationError("Assignment title must be at least 3 characters long.")
+        return value
 
-    
+    def validate_max_score(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Max score must be greater than zero.")
+        if value > 100:
+            raise serializers.ValidationError("Max score cannot exceed 100.")
+        return value
+
+    def validate_due_date(self, value):
+        if value <= timezone.now():
+            raise serializers.ValidationError("Due date must be in the future.")
+        return value
+
+    # ------- OBJECT LEVEL VALIDATION -------
+    def validate(self, data):
+        course = data.get("course")
+        lesson = data.get("lesson")
+
+        # Ensure the lesson actually belongs to the selected course
+        if lesson and course and lesson.course_id != course.id:
+            raise serializers.ValidationError(
+                {"lesson": "Selected lesson does not belong to this course."}
+            )
+
+        return data
+
 
 
 

@@ -1,7 +1,11 @@
 from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.decorators import action
 from django.utils import timezone
+from ..Models.course_models import Courses, Assignment
+from ..serializers.course_serializers import CourseSerializer, AssignmentSerializer
+from ..permissions import isAdmin, isSuperAdmin, isSuperAdmin_Admin_Instructor, is_student
 from ..Models.course_models import Courses,Lessons
 from ..serializers.course_serializers import CourseSerializer,LessonSerializer
 from ..permissions import isAdmin, isSuperAdmin, isSuperAdmin_Admin_Instructor
@@ -54,6 +58,78 @@ class CourseViewSet(viewsets.ModelViewSet):
         course.save()
         serializer = self.get_serializer(course)
         return Response(serializer.data)
+    
+
+
+
+
+
+
+class AssignmentViewSet(viewsets.ModelViewSet):
+    queryset = Assignment.objects.select_related("course", "lesson").all()
+    serializer_class = AssignmentSerializer
+
+    # --------------------------
+    # PERMISSION HANDLING
+    # --------------------------
+    def get_permissions(self):
+        """
+        - Anyone authenticated can READ (list/retrieve)
+        - Only SuperAdmin, Admin or Instructor can CREATE, UPDATE, DELETE
+        """
+        if self.action in ["list", "retrieve"]:
+            permission_classes = [permissions.IsAuthenticated]   # Students also have access
+        else:
+            permission_classes = [isSuperAdmin_Admin_Instructor]
+
+        return [permission() for permission in permission_classes]
+
+    # --------------------------
+    # CREATE OVERRIDE
+    # --------------------------
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        assignment = serializer.save()
+
+        return Response(
+            AssignmentSerializer(assignment).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    # --------------------------
+    # UPDATE OVERRIDE
+    # --------------------------
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+        serializer.is_valid(raise_exception=True)
+        updated_assignment = serializer.save()
+
+        return Response(AssignmentSerializer(updated_assignment).data)
+
+    # --------------------------
+    # PARTIAL UPDATE (PATCH)
+    # --------------------------
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_assignment = serializer.save()
+
+        return Response(AssignmentSerializer(updated_assignment).data)
+
+    # --------------------------
+    # DELETE OVERRIDE
+    # --------------------------
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(
+            {"message": "Assignment deleted successfully"},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 
