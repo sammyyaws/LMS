@@ -83,9 +83,12 @@ class Lessons(models.Model):
    date_created = models.DateTimeField(auto_now_add=True)
    date_modified = models.DateTimeField(auto_now=True)
 
+   class Meta:
+       ordering = ['order_position']
+
    def __str__(self):
-      return self.lesson_title
-   
+       return self.lesson_title
+
 
 ### Assignments by jermie
 class Assignment(models.Model):
