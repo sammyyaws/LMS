@@ -20,18 +20,56 @@ class AssignmentSerializer(serializers.ModelSerializer):
         read_only_fields = ["date_created", "date_modified"]
 
 
+###Quiz Serializer
 
-    
-
-
-
-
-### Quiz Serializer
 class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = "__all__"
-        read_only_fields = ["date_created"]
+        read_only_fields = ["date_created", "date_modified"]
+
+    def validate_quiz_title(self, value):
+        #Ensure quiz title is not empty and not too long.
+        if not value.strip():
+            raise serializers.ValidationError("Cannot leave quiz title empty!.")
+        if len(value) > 255:
+            raise serializers.ValidationError("Quiz title cannot exceed 255 characters!.")
+        return value
+
+    def validate_quiz_content(self, value):
+        #Ensure quiz_content is a valid JSON structure.
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("This quiz content must be a valid JSON object.")
+        if not value:
+            raise serializers.ValidationError("Quiz content cannot be empty.")
+        return value
+
+    def validate_max_score(self, value):
+        #Ensure max_score is a positive integer.
+        if value < 0:
+            raise serializers.ValidationError("Max score cannot be negative!.")
+        return value
+
+    def validate_course(self, value):
+        #Ensure the course exists (optional extra check).
+        if not Courses.objects.filter(id=value.id).exists():
+            raise serializers.ValidationError("This course does not exist.")
+        return value
+
+    def validate_lesson(self, value):
+        #Ensure the lesson exists and belongs to the same course.
+        if not Lessons.objects.filter(id=value.id).exists():
+            raise serializers.ValidationError("Lesson does not exist.")
+        if value.course != self.initial_data.get('course'):
+            raise serializers.ValidationError("Lesson does not belong to the selected course.")
+        return value
+
+    def validate(self, data):
+        #Additional cross-field validation if needed.
+        # Ensure max_score is consistent with quiz_content, e.g., number of questions
+        # Optional: implement any logic here if quiz_content defines points per question
+        return data
+
 
 
 
