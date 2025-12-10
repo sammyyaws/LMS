@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from django.utils import timezone
-from ..Models.course_models import Courses, Assignment
-from ..serializers.course_serializers import CourseSerializer, AssignmentSerializer
+from ..Models.course_models import Courses, Assignment,Progress
+from ..serializers.course_serializers import CourseSerializer, AssignmentSerializer, ProgressSerializer
 from ..permissions import isAdmin, isSuperAdmin, isSuperAdmin_Admin_Instructor, is_student
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -127,3 +127,52 @@ class AssignmentViewSet(viewsets.ModelViewSet):
             {"message": "Assignment deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
+
+
+
+class ProgressViewSet(viewsets.ModelViewSet):
+    queryset = Progress.objects.all().select_related("user", "course", "lesson")
+    serializer_class = ProgressSerializer
+
+    # -----------------------------
+    # PERMISSIONS
+    # -----------------------------
+    def get_permissions(self):
+
+        # Students can only view their own progress
+        if self.action in ["list", "retrieve"]:
+            return [permissions.IsAuthenticated()]
+
+        # Only SuperAdmin, Admin, or Instructor can CREATE, UPDATE, or DELETE
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [isSuperAdmin_Admin_Instructor()]
+
+        return [permissions.IsAuthenticated()]
+
+    # -----------------------------
+    # LIMIT STUDENT VISIBILITY
+    # -----------------------------
+    def get_queryset(self):
+        user = self.request.user
+
+        # If student → only return their own progress records
+        if hasattr(user, "userProfile") and user.userProfile.role.role_name == "student":
+            return Progress.objects.filter(user=user)
+
+        # For admin roles → return everything
+        return Progress.objects.all()
+
+    # -----------------------------
+    # ENSURE STUDENT CANNOT CREATE
+    # -----------------------------
+    def create(self, request, *args, **kwargs):
+        user = request.user
+
+        # Block students from creating progress
+        if hasattr(user, "userProfile") and user.userProfile.role.role_name == "student":
+            return Response(
+                {"detail": "Students cannot create progress records manually."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().create(request, *args, **kwargs)

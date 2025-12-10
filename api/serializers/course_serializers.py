@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..Models.course_models import Courses, Lessons, Assignment, Quiz, Submission,Course_categories
+from ..Models.course_models import Courses, Lessons, Assignment, Quiz, Submission,Course_categories, Progress
 from django.utils import timezone
 
 
@@ -205,3 +205,60 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid status value.")
         return value
 
+
+
+class ProgressSerializer(serializers.ModelSerializer):
+    # Optional readable fields
+    course_title = serializers.CharField(source="course.title", read_only=True)
+    lesson_title = serializers.CharField(source="lesson.lesson_title", read_only=True)
+    user_name = serializers.CharField(source="user.get_full_name", read_only=True)
+
+    class Meta:
+        model = Progress
+        fields = [
+            "id",
+            "user",
+            "user_name",
+            "course",
+            "course_title",
+            "lesson",
+            "lesson_title",
+        ]
+
+    # ==========================
+    # FIELD LEVEL VALIDATION
+    # ==========================
+
+    def validate_user(self, value):
+        if not value.is_active:
+            raise serializers.ValidationError("User account is not active.")
+        return value
+
+    # ==========================
+    # OBJECT LEVEL VALIDATION
+    # ==========================
+
+    def validate(self, data):
+        user = data.get("user")
+        course = data.get("course")
+        lesson = data.get("lesson")
+
+        # 1. Ensure lesson belongs to the course
+        if lesson and course and lesson.course_id != course.id:
+            raise serializers.ValidationError(
+                {"lesson": "Selected lesson does NOT belong to this course."}
+            )
+
+        # 2. Prevent duplicate progress records
+        if Progress.objects.filter(user=user, course=course, lesson=lesson).exists():
+            raise serializers.ValidationError(
+                "Progress for this user, course, and lesson already exists."
+            )
+
+        # 3. Optional: If you introduce enrollments, validate enrollment
+        # if not Enrollment.objects.filter(user=user, course=course).exists():
+        #     raise serializers.ValidationError(
+        #         {"user": "User is not enrolled in this course."}
+        #     )
+
+        return data
