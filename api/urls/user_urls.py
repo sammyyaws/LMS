@@ -7,4 +7,6 @@ path('register/',user_views.CreateUserAPI.as_view()),
 path('update-user/<int:pk>/',user_views.UpdateUserAPI.as_view()),
 path('login/',user_views.LoginUserView.as_view()),
 path('logout/', LogoutView.as_view(), name='knox_logout'),
+path('delete-account/', user_views.DeleteAccountAPI.as_view(), name='delete-account'),
+
 ]

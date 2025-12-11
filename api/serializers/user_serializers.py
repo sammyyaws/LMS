@@ -27,38 +27,47 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerialzer(serializers.ModelSerializer):
-    password=serializers.CharField(write_only=True)                                                               
+    password = serializers.CharField(write_only=True)
+
     class Meta:
-        model=User
-        fields=[
+        model = User
+        fields = [
             'username',
             'email',
             'password',
             'first_name',
             'last_name'
-            ]
-        extra_kwargs={
-        'password':{'write_only':True,
-                    'required':True}
-        }
+        ]
 
-    def validate(self,attrs):
-            if User.objects.filter(email=attrs['email']).exists():
-                raise serializers.ValidationError({"email":"Email already exists"})
-            if User.objects.filter(username=attrs['username']).exists():
-                raise serializers.ValidationError({'username':'Username has been taken'})
-            return attrs
-        
-    def create(self,validated_data):
-           password=validated_data.pop('password')
-           user=User.objects.create(**validated_data)
-           user.set_password(password)
-           user.save()
-##assigning defualt role to user
-           default_role=Role.objects.get(role_name='student')
-           ###creating the a new user profile
-           user_profile=userProfile.objects.create(user=user, role=default_role)
-           return user
+    def validate(self, attrs):
+        if User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError({"email": "Email already exists"})
+        if User.objects.filter(username=attrs['username']).exists():
+            raise serializers.ValidationError({'username': 'Username has been taken'})
+        return attrs
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            password=password,
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", "")
+        )
+
+        # assign default role
+        default_role = Role.objects.get(role_name='student')
+
+        # create profile
+        user_profile = userProfile.objects.create(
+            user=user,
+            role=default_role
+        )
+
+        return user
+
 
            ###########update user serializer#################
 class UpdateUserSerializer(serializers.ModelSerializer):

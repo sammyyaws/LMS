@@ -1,21 +1,21 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import generics
+from rest_framework import generics,permissions
 from rest_framework.permissions import AllowAny
 from api.Models.user_models import userProfile
 from api.serializers.user_serializers import UserSerializer,CreateUserSerialzer,UpdateUserSerializer,LoginUserSerializer
 from knox import views as Knox_view
 from django.contrib.auth import login
-
+from django.contrib.auth.models import User
 
 class CreateUserAPI(generics.CreateAPIView):
-    queryset=userProfile.objects.all()
+    queryset=User.objects.all()
     serializer_class=CreateUserSerialzer
     permission_classes=[AllowAny]
 
 class UpdateUserAPI(generics.UpdateAPIView):
-    queryset=userProfile.objects.all()
+    queryset=User.objects.all()
     serializer_class=UpdateUserSerializer
 
 
@@ -39,3 +39,10 @@ class LoginUserView(Knox_view.LoginView):
         # Build custom response
         response.data["user"] = user_data
         return response
+
+
+class DeleteAccountAPI(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
