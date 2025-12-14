@@ -21,7 +21,7 @@ Authentication is powered by **JSON Web Tokens (JWT)** for secure access and ses
 ##Tech Stack
 
 - **Backend Framework:** Django, Django REST Framework  
-- **Authentication:** JWT (using `djangorestframework-simplejwt`)  
+- **Authentication:** KNOX
 - **Database:** SQLite (development) / PostgreSQL (production)  
 - **Language:** Python 3.10+  
 - **Version Control:** Git & GitHub  
