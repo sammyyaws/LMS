@@ -2,7 +2,7 @@
 
 This is the **Django REST API backend** for the **STEMAIDE Learning Management System (LMS)**.  
 It provides secure and scalable endpoints for managing users, courses, enrollment, and authentication.  
-Authentication is powered by **JSON Web Tokens (JWT)** for secure access and session management.
+Authentication is powered by **Knox** for secure access and session management.
 
 ---
 
