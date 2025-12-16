@@ -40,7 +40,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         score = data.get('score')
 
         # Check if assignment exists
-        if not insistance(assignment, Assignment):
+        if not isinstance(assignment, Assignment):
             raise serializers.ValidationError("Assignment does not exist.")
 
 ###AssignmentSerializer with nested submissions

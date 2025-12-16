@@ -91,7 +91,7 @@ class QuizViewSet(viewsets.ModelViewSet):
 
 ###Quiz Viewset 2
 class QuizViewSet(viewsets.ModelViewSet):
-    queryset = Quiz.objects.all().order_by("-date_created")
+    queryset = Quizzes.objects.all().order_by("-date_created")
     serializer_class = QuizSerializer
     permission_classes = [permissions.IsAuthenticated]  # optional
 
