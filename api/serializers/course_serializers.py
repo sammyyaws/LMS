@@ -10,10 +10,43 @@ class SubmissionSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ["date_submitted", "date_graded"]
 
+
+    def validate_status(self, value):
+        """
+        Validate status (you can replace with your own business meaning).
+        Example: 0 = Submitted, 1 = Graded, 2 = Late, etc.
+        """
+        if value < 0:
+            raise serializers.ValidationError("Status cannot be a negative number.")
+        return value
+
+    def validate_content(self, value):
+        """Ensure content is not empty."""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Submission content cannot be empty.")
+        if len(value) > 500:
+            raise serializers.ValidationError("Submission content cannot exceed 500 characters.")
+        return value
+    
+    def validate_score(self, value):
+        """Ensure score is non-negative."""
+        if value < 0:
+            raise serializers.ValidationError("Score cannot be negative.")
+        return value
+    
+    def validate(self, data):
+        assignment = data.get('assignment')
+        user = data.get('user_id')
+        score = data.get('score')
+
+        # Check if assignment exists
+        if not insistance(assignment, Assignment):
+            raise serializers.ValidationError("Assignment does not exist.")
+
 ###AssignmentSerializer with nested submissions
 class AssignmentSerializer(serializers.ModelSerializer):
     submissions = SubmissionSerializer(many=True, read_only=True, source='submissions')
-
+ 
     class Meta:
         model =Assignment
         fields = "__all__"
